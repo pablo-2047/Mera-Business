@@ -1,0 +1,23 @@
+# Bharat Biz-Agent Dependencies
+
+# Web Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# HTTP Client
+httpx==0.26.0
+
+# Google Gemini AI
+google-generativeai==0.3.2
+
+# Database (SQLite is built-in with Python)
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Data Validation
+pydantic==2.5.3
+
+# Logging
+colorlog==6.8.2
