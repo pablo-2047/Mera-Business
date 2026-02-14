@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+*.db
+*.db-wal
+*.db-shm
+
+# Media & logs
+/tmp/
+media/
+logs/
+
+# Generated files
+*.pdf
+sample_invoice.pdf
+
+# IDE
+.vscode/
+.idea/
