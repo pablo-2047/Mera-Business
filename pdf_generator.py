@@ -30,21 +30,22 @@ def generate_invoice_pdf(
         Path to generated PDF file
     """
     
-    # Default business info if not provided
+    # Default business info — override via BUSINESS_* env vars or pass dict directly
     if not business_info:
         business_info = {
-            'name': 'Electronics Paradise',
-            'address': 'Shop No. 12, Main Market, Lucknow - 226001',
-            'phone': '+91-9876543210',
-            'email': 'contact@electronicsparadise.in',
-            'gstin': '09AAAAA0000A1Z5',
-            'logo': None  # Optional: path to logo image
+            'name':    os.getenv('BUSINESS_NAME',    'Your Business Name'),
+            'address': os.getenv('BUSINESS_ADDRESS', 'Your Business Address'),
+            'phone':   os.getenv('BUSINESS_PHONE',   '+91-XXXXXXXXXX'),
+            'email':   os.getenv('BUSINESS_EMAIL',   'your@email.com'),
+            'gstin':   os.getenv('BUSINESS_GSTIN',   'GSTIN_NOT_SET'),
+            'logo':    None,
         }
-    
-    # Generate output path
+
+    # Generate output path — save next to the database by default
     if not output_path:
-        os.makedirs('/mnt/user-data/outputs', exist_ok=True)
-        output_path = f"/mnt/user-data/outputs/Invoice_{invoice_data['invoice_number']}.pdf"
+        out_dir = os.getenv('PDF_OUTPUT_DIR', os.path.join(os.path.dirname(__file__), 'invoices'))
+        os.makedirs(out_dir, exist_ok=True)
+        output_path = os.path.join(out_dir, f"Invoice_{invoice_data['invoice_number']}.pdf")
     
     # Create PDF
     doc = SimpleDocTemplate(output_path, pagesize=A4)

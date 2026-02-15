@@ -1,28 +1,16 @@
 """
-Simple Intent Router - WITHOUT Function Calling
-Uses direct prompting instead of function calling for compatibility
+Mera Business — Offline Fallback Intent Router
+Pattern-matching router used when Gemini API is unavailable.
+No external dependencies — works 100% offline.
 """
 
-import os
+import re
 import logging
 from typing import Optional
-from dotenv import load_dotenv
-
-load_dotenv()
-
-try:
-    import google.generativeai as genai
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-    if GEMINI_API_KEY:
-        genai.configure(api_key=GEMINI_API_KEY)
-    GEMINI_AVAILABLE = True
-except Exception as e:
-    GEMINI_AVAILABLE = False
-    print(f"Gemini not available: {e}")
 
 from database import (
     create_invoice, record_payment, update_inventory,
-    get_daily_summary, create_product, create_customer
+    get_daily_summary,
 )
 
 logger = logging.getLogger(__name__)
@@ -30,173 +18,131 @@ logger = logging.getLogger(__name__)
 
 async def route_intent_and_execute_simple(text_content: str) -> str:
     """
-    Simplified version without function calling
-    Parses text directly and calls functions
+    Pattern-match Hindi/Hinglish/English → call DB function → return response.
+    Used as automatic fallback when Gemini API call fails.
     """
-    
-    text_lower = text_content.lower()
-    
-    # Pattern matching for common operations
-    
-    # Invoice creation: "Ramesh ko phone becha 30000"
-    if 'becha' in text_lower or 'sold' in text_lower or 'invoice' in text_lower or 'bill' in text_lower:
+    t = text_content.lower().strip()
+    numbers = re.findall(r'\d+', text_content)
+
+    # ── Invoice / Sale ───────────────────────────────────────────────────────
+    if any(k in t for k in ['becha', 'beci', 'sold', 'invoice', 'bill bana']):
         try:
-            # Extract customer name (word before 'ko')
             words = text_content.split()
-            customer_idx = -1
-            for i, word in enumerate(words):
-                if 'ko' in word.lower():
-                    customer_idx = i
+            customer_name = "Customer"
+            for i, w in enumerate(words):
+                if w.lower() in ('ko', 'ke') and i > 0:
+                    customer_name = words[i - 1]
                     break
-            
-            if customer_idx > 0:
-                customer_name = words[customer_idx - 1]
-            else:
-                customer_name = "Customer"
-            
-            # Extract amount (look for numbers)
-            import re
-            amounts = re.findall(r'\d+', text_content)
-            amount = int(amounts[-1]) if amounts else 30000
-            
-            # Determine product (simple logic)
-            product_name = "Vivo V29"  # Default
-            if 'samsung' in text_lower or 's23' in text_lower:
+
+            amount = int(numbers[-1]) if numbers else 30000
+
+            product_name = "Product"
+            if 'samsung' in t or 's23' in t:
                 product_name = "Samsung S23"
-                amount = amount or 54999
-            elif 'iphone' in text_lower or '15' in text_lower:
+            elif 'iphone' in t:
                 product_name = "iPhone 15"
-                amount = amount or 79999
-            elif 'vivo' in text_lower or 'v29' in text_lower:
+            elif 'vivo' in t or 'v29' in t:
                 product_name = "Vivo V29"
-                amount = amount or 29999
-            
-            # Create invoice
+
+            payment_mode = "UPI" if 'upi' in t else ("Cash" if 'cash' in t else None)
+
             invoice = create_invoice(
                 customer_name=customer_name,
-                items=[{
-                    'product_name': product_name,
-                    'quantity': 1,
-                    'rate': amount,
-                    'gst_rate': 18
-                }],
-                payment_mode='UPI' if 'upi' in text_lower else None
+                items=[{'product_name': product_name, 'quantity': 1,
+                        'rate': amount, 'gst_rate': 18}],
+                payment_mode=payment_mode
             )
-            
-            total = invoice['total_amount']
             gst = invoice['gst_amount']
-            
-            return f"""✅ Invoice created!
-📄 {invoice['invoice_number']}
-👤 Customer: {customer_name}
-📱 Product: {product_name}
-💰 Amount: ₹{amount:,.2f}
-📊 GST (18%): ₹{gst:,.2f}
-💵 Total: ₹{total:,.2f}
-📦 Stock updated!"""
-            
+            total = invoice['total_amount']
+            return (
+                f"✅ Invoice created!\n"
+                f"📄 {invoice['invoice_number']}\n"
+                f"👤 Customer: {customer_name}\n"
+                f"📦 {product_name} × 1\n"
+                f"💰 ₹{amount:,.0f} + GST ₹{gst:,.2f} = ₹{total:,.2f}\n"
+                f"{'💳 ' + payment_mode if payment_mode else '📝 Udhaar recorded'}"
+            )
         except Exception as e:
-            logger.error(f"Error creating invoice: {e}")
-            return f"क्षमा करें, invoice create करने में error आया: {str(e)}"
-    
-    # Payment recording: "Ramesh se 5000 payment aaya"
-    elif 'payment' in text_lower or 'paisa' in text_lower or 'पैसे' in text_lower:
+            logger.error(f"Fallback invoice error: {e}")
+            return f"Invoice बनाने में दिक्कत आई। Error: {e}"
+
+    # ── Payment Received ──────────────────────────────────────────────────────
+    if any(k in t for k in ['payment', 'paisa', 'diya', 'aaya', 'received']):
         try:
-            # Extract customer name
             words = text_content.split()
-            customer_idx = -1
-            for i, word in enumerate(words):
-                if 'se' in word.lower():
-                    customer_idx = i
+            customer_name = "Customer"
+            for i, w in enumerate(words):
+                if w.lower() in ('se', 'ne', 'from') and i > 0:
+                    customer_name = words[i - 1]
                     break
-            
-            if customer_idx > 0:
-                customer_name = words[customer_idx - 1]
-            else:
-                customer_name = "Customer"
-            
-            # Extract amount
-            import re
-            amounts = re.findall(r'\d+', text_content)
-            amount = int(amounts[0]) if amounts else 5000
-            
-            # Record payment
-            payment = record_payment(
-                customer_name=customer_name,
-                amount=amount,
-                payment_mode='UPI' if 'upi' in text_lower else 'Cash'
-            )
-            
-            return f"""✅ Payment recorded!
-💰 Amount: ₹{amount:,.2f}
-👤 Customer: {customer_name}
-💳 Mode: {'UPI' if 'upi' in text_lower else 'Cash'}
-📊 New Outstanding: ₹{payment['new_balance']:,.2f}"""
-            
-        except Exception as e:
-            logger.error(f"Error recording payment: {e}")
-            return f"क्षमा करें, payment record करने में error आया: {str(e)}"
-    
-    # Daily summary: "Aaj ka hisaab"
-    elif 'hisaab' in text_lower or 'summary' in text_lower or 'हिसाब' in text_lower:
-        try:
-            summary = get_daily_summary()
-            
-            return f"""📊 आज का हिसाब ({summary['date']})
 
-💰 Sales: {summary['sales']['count']} invoices - ₹{summary['sales']['total']:,.2f}
-💸 Payments: {summary['payments']['count']} received - ₹{summary['payments']['total']:,.2f}
-📉 Expenses: {summary['expenses']['count']} - ₹{summary['expenses']['total']:,.2f}
-💵 Net Cash Flow: ₹{summary['net_cash_flow']:,.2f}
-⚠️  Outstanding Udhaar: ₹{summary['outstanding_udhaar']:,.2f}"""
-            
+            amount = int(numbers[0]) if numbers else 1000
+            mode = "UPI" if 'upi' in t else ("Cash" if 'cash' in t else "UPI")
+            utr = None
+            if 'utr' in t and len(numbers) > 1:
+                utr = numbers[1]
+
+            result = record_payment(customer_name=customer_name, amount=amount,
+                                    payment_mode=mode, utr_number=utr)
+            return (
+                f"✅ Payment recorded!\n"
+                f"👤 {customer_name}\n"
+                f"💰 ₹{amount:,.0f} via {mode}"
+                + (f"\n🔖 UTR: {utr}" if utr else "")
+                + f"\n📊 Outstanding: ₹{result['new_balance']:,.2f}"
+            )
         except Exception as e:
-            logger.error(f"Error getting summary: {e}")
-            return f"क्षमा करें, summary निकालने में error आया: {str(e)}"
-    
-    # Stock update: "iPhone ka stock 5 add karo"
-    elif 'stock' in text_lower and ('add' in text_lower or 'karo' in text_lower):
+            logger.error(f"Fallback payment error: {e}")
+            return f"Payment record करने में दिक्कत आई। Error: {e}"
+
+    # ── Daily Summary ─────────────────────────────────────────────────────────
+    if any(k in t for k in ['hisaab', 'summary', 'हिसाब', 'report', 'aaj ka']):
         try:
-            # Extract product
-            product_name = "Vivo V29"  # Default
-            if 'samsung' in text_lower or 's23' in text_lower:
+            s = get_daily_summary()
+            return (
+                f"📊 आज का हिसाब ({s['date']})\n\n"
+                f"💰 Sales   : {s['sales']['count']} invoices — ₹{s['sales']['total']:,.2f}\n"
+                f"💸 Payments: {s['payments']['count']} received — ₹{s['payments']['total']:,.2f}\n"
+                f"📉 Expenses: {s['expenses']['count']} — ₹{s['expenses']['total']:,.2f}\n"
+                f"💵 Net Cash : ₹{s['net_cash_flow']:,.2f}\n"
+                f"⚠️  Udhaar  : ₹{s['outstanding_udhaar']:,.2f}"
+            )
+        except Exception as e:
+            logger.error(f"Fallback summary error: {e}")
+            return f"Summary निकालने में दिक्कत आई। Error: {e}"
+
+    # ── Inventory Add ─────────────────────────────────────────────────────────
+    if 'stock' in t and any(k in t for k in ['add', 'daalo', 'jodo', 'increase']):
+        try:
+            product_name = "Vivo V29"
+            if 'samsung' in t:
                 product_name = "Samsung S23"
-            elif 'iphone' in text_lower:
+            elif 'iphone' in t:
                 product_name = "iPhone 15"
-            
-            # Extract quantity
-            import re
-            quantities = re.findall(r'\d+', text_content)
-            quantity = int(quantities[0]) if quantities else 5
-            
-            # Update inventory
-            product = update_inventory(
-                product_name=product_name,
-                quantity=quantity,
-                operation='add'
+
+            qty = int(numbers[0]) if numbers else 10
+            p = update_inventory(product_name=product_name, quantity=qty, operation='add')
+            return (
+                f"✅ Stock updated!\n"
+                f"📦 {product_name}\n"
+                f"➕ Added: {qty} units\n"
+                f"📊 New stock: {p['stock']} units"
             )
-            
-            return f"""✅ Inventory updated!
-📱 Product: {product_name}
-➕ Added: {quantity} pieces
-📦 New Stock: {product['stock']} units"""
-            
         except Exception as e:
-            logger.error(f"Error updating inventory: {e}")
-            return f"क्षमा करें, stock update करने में error आया: {str(e)}"
-    
-    else:
-        # Generic response
-        return f"""मुझे समझ नहीं आया। कृपया कोशिश करें:
+            logger.error(f"Fallback inventory error: {e}")
+            return f"Stock update करने में दिक्कत आई। Error: {e}"
 
-📝 Invoice: "Ramesh ko phone becha 30000 mein"
-💰 Payment: "Ramesh se 5000 payment aaya UPI se"
-📊 Summary: "Aaj ka hisaab batao"
-📦 Stock: "iPhone ka stock 5 add karo"
-"""
+    # ── Unknown ───────────────────────────────────────────────────────────────
+    return (
+        "मुझे समझ नहीं आया। कृपया इस तरह बताएं:\n\n"
+        "📝 Invoice  : \"Ramesh ko Vivo becha 30000\"\n"
+        "💰 Payment  : \"Ramesh se 5000 payment aaya UPI se\"\n"
+        "📊 Summary  : \"Aaj ka hisaab batao\"\n"
+        "📦 Stock    : \"Vivo ka 20 piece stock add karo\""
+    )
 
 
-# Alias for compatibility
-async def route_intent_and_execute(text_content: str, media_path=None, media_type=None) -> str:
-    """Wrapper for compatibility"""
+async def route_intent_and_execute(
+    text_content: str, media_path: Optional[str] = None, media_type: Optional[str] = None
+) -> str:
     return await route_intent_and_execute_simple(text_content)

@@ -1,22 +1,60 @@
+# Environment variables with secrets
+.env
+
 # Python
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
+*.so
+.Python
 venv/
-.env
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Database files
 *.db
-*.db-wal
+*.db-journal
 *.db-shm
+*.db-wal
 
-# Media & logs
-/tmp/
-media/
+# Logs
 logs/
+*.log
 
-# Generated files
-*.pdf
-sample_invoice.pdf
+# Media files
+media/
+chat_media/
+invoices/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker secrets
+secrets/
+
+# Temporary files
+*.zip
+*.tmp
