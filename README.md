@@ -81,90 +81,7 @@ Built for **Neurathon 2026 - Problem Statement 2**: Addressing the operational f
 └─────────────────────────────────┘
 ```
 
-## 🚀 Quick Start
 
-### Prerequisites
-- Python 3.11+
-- Meta WhatsApp Business Account
-- Gemini API Key
-- ngrok (for local testing)
-
-### Installation
-
-1. **Clone and Setup**
-```bash
-git clone <your-repo>
-cd bharat-biz-agent
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-2. **Configure Environment**
-```bash
-# Copy example env file
-cp .env.example .env
-
-# Edit .env with your credentials
-nano .env
-```
-
-Required credentials:
-- `WHATSAPP_VERIFY_TOKEN`: Your custom token for webhook verification
-- `WHATSAPP_TOKEN`: Permanent access token from Meta
-- `WHATSAPP_PHONE_NUMBER_ID`: Your WhatsApp Business phone number ID
-- `GEMINI_API_KEY`: Get from https://makersuite.google.com/app/apikey
-
-3. **Initialize Database**
-```bash
-python database.py
-```
-
-This creates `bharat_biz.db` with sample products:
-- Vivo V29
-- Samsung S23
-- iPhone 15
-
-### Running Locally
-
-#### Option 1: Direct Python
-```bash
-# Start the server
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
-
-# In another terminal, expose to internet
-ngrok http 8000
-```
-
-#### Option 2: Docker
-```bash
-# Build and run
-docker-compose up --build
-
-# Or with ngrok
-docker-compose up -d
-ngrok http 8000
-```
-
-### WhatsApp Setup
-
-1. Go to [Meta Business Developer Portal](https://developers.facebook.com/)
-2. Create/Select your app
-3. Add WhatsApp product
-4. Configure webhook:
-   - **URL**: `https://your-ngrok-url.ngrok.io/webhook`
-   - **Verify Token**: Same as in your `.env`
-   - **Subscribe to**: messages
-
-5. Test it!
-```
-Send to your WhatsApp Business number:
-"Hello"
-```
 
 ## 📝 Usage Examples
 
@@ -406,24 +323,7 @@ gst_filings
 └── net_gst
 ```
 
-## 🧪 Testing
 
-### Manual Testing
-```bash
-# Test webhook verification
-curl "http://localhost:8000/webhook?hub.mode=subscribe&hub.verify_token=bharat_biz_agent_2026&hub.challenge=test123"
-
-# Should return: test123
-```
-
-### Function Testing
-```python
-# Test database operations
-python
->>> from database import *
->>> create_invoice("Test Customer", [{"product_name": "Vivo V29", "quantity": 1, "rate": 29999}])
->>> get_daily_summary()
-```
 
 ### Integration Testing
 Send these messages to your WhatsApp:
@@ -465,34 +365,7 @@ Send these messages to your WhatsApp:
    - Payment gateway integration
    - Razorpay/PhonePe APIs
 
-## 🐛 Troubleshooting
 
-### Webhook not receiving messages
-```bash
-# Check ngrok is running
-ngrok http 8000
-
-# Verify webhook URL in Meta portal
-# Check server logs
-tail -f logs/app.log
-```
-
-### Gemini API errors
-```bash
-# Verify API key
-echo $GEMINI_API_KEY
-
-# Check quota
-# Visit: https://makersuite.google.com/app/apikey
-```
-
-### Database locked
-```bash
-# Check for stale connections
-lsof bharat_biz.db
-
-# Restart server
-```
 
 ## 📄 License
 
@@ -508,13 +381,16 @@ Contributions welcome! Please:
 
 ## 👥 Team
 
-Built for Neurathon 2026 by [Your Team Name]
-
+Built for Neurathon 2026 by BuildEX
+->Hammad Sajid
+->Rezin Salam
+->Akshit K Rajeev
+->Huzaifa
 ## 📞 Support
 
-- Email: support@bharatbiz.ai
-- WhatsApp: +91-XXXX-XXXX
-- GitHub Issues: [link]
+- Email: hammadsajidm@gmail.com
+- WhatsApp: +91 9744887338
+  
 
 ---
 
