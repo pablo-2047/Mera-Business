@@ -16,7 +16,7 @@ from database import (
 logger = logging.getLogger(__name__)
 
 
-async def route_intent_and_execute_simple(text_content: str) -> str:
+async def route_intent_and_execute_simple(text_content: str, owner_id: str = 'default') -> str:
     """
     Pattern-match Hindi/Hinglish/English → call DB function → return response.
     Used as automatic fallback when Gemini API call fails.
@@ -50,7 +50,8 @@ async def route_intent_and_execute_simple(text_content: str) -> str:
                 customer_name=customer_name,
                 items=[{'product_name': product_name, 'quantity': 1,
                         'rate': amount, 'gst_rate': 18}],
-                payment_mode=payment_mode
+                payment_mode=payment_mode,
+                owner_id=owner_id
             )
             gst = invoice['gst_amount']
             total = invoice['total_amount']
@@ -83,7 +84,7 @@ async def route_intent_and_execute_simple(text_content: str) -> str:
                 utr = numbers[1]
 
             result = record_payment(customer_name=customer_name, amount=amount,
-                                    payment_mode=mode, utr_number=utr)
+                                    payment_mode=mode, utr_number=utr, owner_id=owner_id)
             return (
                 f"✅ Payment recorded!\n"
                 f"👤 {customer_name}\n"
@@ -98,7 +99,7 @@ async def route_intent_and_execute_simple(text_content: str) -> str:
     # ── Daily Summary ─────────────────────────────────────────────────────────
     if any(k in t for k in ['hisaab', 'summary', 'हिसाब', 'report', 'aaj ka']):
         try:
-            s = get_daily_summary()
+            s = get_daily_summary(owner_id=owner_id)
             return (
                 f"📊 आज का हिसाब ({s['date']})\n\n"
                 f"💰 Sales   : {s['sales']['count']} invoices — ₹{s['sales']['total']:,.2f}\n"
@@ -121,7 +122,7 @@ async def route_intent_and_execute_simple(text_content: str) -> str:
                 product_name = "iPhone 15"
 
             qty = int(numbers[0]) if numbers else 10
-            p = update_inventory(product_name=product_name, quantity=qty, operation='add')
+            p = update_inventory(product_name=product_name, quantity=qty, operation='add', owner_id=owner_id)
             return (
                 f"✅ Stock updated!\n"
                 f"📦 {product_name}\n"
@@ -143,6 +144,7 @@ async def route_intent_and_execute_simple(text_content: str) -> str:
 
 
 async def route_intent_and_execute(
-    text_content: str, media_path: Optional[str] = None, media_type: Optional[str] = None
+    text_content: str, media_path: Optional[str] = None,
+    media_type: Optional[str] = None, owner_id: str = 'default'
 ) -> str:
-    return await route_intent_and_execute_simple(text_content)
+    return await route_intent_and_execute_simple(text_content, owner_id=owner_id)

@@ -1,28 +1,30 @@
 # Mera Business — Python Dependencies
 # Install: pip install -r requirements.txt
 
-# ── Web Framework ───────────────────────────────────────────────────────────
+# Web Framework
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
 python-multipart==0.0.6
 
-# ── HTTP Client ─────────────────────────────────────────────────────────────
+# HTTP Client
 httpx==0.26.0
 
-# ── Google Gemini AI (new SDK — NOT google-generativeai) ────────────────────
+# Google Gemini AI (new SDK)
 google-genai>=1.0.0
 
-# ── Environment & Config ────────────────────────────────────────────────────
+# Environment & Config
 python-dotenv==1.0.0
 
-# ── Data Validation ─────────────────────────────────────────────────────────
+# Data Validation
 pydantic==2.5.3
 
-# ── PDF Generation ──────────────────────────────────────────────────────────
+# PDF Generation
 reportlab==4.0.9
 
-# ── Logging ─────────────────────────────────────────────────────────────────
+# Logging
 colorlog==6.8.2
 
-# ── Database ────────────────────────────────────────────────────────────────
-# SQLite3 ships with Python — no extra package needed
+# Date utilities
+python-dateutil==2.8.2
+
+# SQLite ships with Python — no extra package needed

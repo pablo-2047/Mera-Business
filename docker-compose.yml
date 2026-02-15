@@ -1,23 +1,36 @@
 version: '3.8'
 
 services:
-  bharat-biz-agent:
+  mera-business:
     build: .
-    container_name: bharat-biz-agent
+    container_name: mera-business-app
     ports:
       - "8000:8000"
     environment:
-      - WHATSAPP_VERIFY_TOKEN=${WHATSAPP_VERIFY_TOKEN}
-      - WHATSAPP_TOKEN=${WHATSAPP_TOKEN}
-      - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID}
+      # Load from .env file (judges will need to create this)
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - BUSINESS_OWNER_PHONE=${BUSINESS_OWNER_PHONE:-+919999999999}
+      - AUTHORIZED_TEST_PHONES=${AUTHORIZED_TEST_PHONES:-}
+      - BUSINESS_NAME=${BUSINESS_NAME:-Mera Business Demo}
+      - BUSINESS_ADDRESS=${BUSINESS_ADDRESS:-Nehru Place, New Delhi}
+      - BUSINESS_PHONE=${BUSINESS_PHONE:-+91-XXXXXXXXXX}
+      - BUSINESS_EMAIL=${BUSINESS_EMAIL:-demo@merabusiness.ai}
+      - BUSINESS_GSTIN=${BUSINESS_GSTIN:-07AAAAA0000A1Z5}
     volumes:
+      # Persist database across container restarts
       - ./bharat_biz.db:/app/bharat_biz.db
-      - ./media:/tmp/whatsapp_media
+      # Persist generated PDFs
+      - ./invoices:/app/invoices
+      # Persist uploaded media
+      - ./chat_media:/app/chat_media
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+
+networks:
+  default:
+    name: mera-business-network
