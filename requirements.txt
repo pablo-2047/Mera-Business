@@ -1,0 +1,48 @@
+<<<<<<< HEAD
+# Mera Business — Python Dependencies
+# Install: pip install -r requirements.txt
+=======
+# Bharat Biz-Agent Dependencies
+>>>>>>> 7e4398ab37a263c75b381f78a874db8edee8182f
+
+# Web Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# HTTP Client
+httpx==0.26.0
+
+<<<<<<< HEAD
+# Google Gemini AI (new SDK)
+google-genai>=1.0.0
+
+# Environment & Config
+=======
+# Google Gemini AI
+google-generativeai==0.3.2
+
+# Database (SQLite is built-in with Python)
+
+# Environment Variables
+>>>>>>> 7e4398ab37a263c75b381f78a874db8edee8182f
+python-dotenv==1.0.0
+
+# Data Validation
+pydantic==2.5.3
+
+<<<<<<< HEAD
+# PDF Generation
+reportlab==4.0.9
+
+# Logging
+colorlog==6.8.2
+
+# Date utilities
+python-dateutil==2.8.2
+
+# SQLite ships with Python — no extra package needed
+=======
+# Logging
+colorlog==6.8.2
+>>>>>>> 7e4398ab37a263c75b381f78a874db8edee8182f

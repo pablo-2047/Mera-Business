@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+<<<<<<< HEAD
+  mera-business:
+    build: .
+    container_name: mera-business-app
+    ports:
+      - "8000:8000"
+    environment:
+      # Load from .env file (judges will need to create this)
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - BUSINESS_OWNER_PHONE=${BUSINESS_OWNER_PHONE:-+919999999999}
+      - AUTHORIZED_TEST_PHONES=${AUTHORIZED_TEST_PHONES:-}
+      - BUSINESS_NAME=${BUSINESS_NAME:-Mera Business Demo}
+      - BUSINESS_ADDRESS=${BUSINESS_ADDRESS:-Nehru Place, New Delhi}
+      - BUSINESS_PHONE=${BUSINESS_PHONE:-+91-XXXXXXXXXX}
+      - BUSINESS_EMAIL=${BUSINESS_EMAIL:-demo@merabusiness.ai}
+      - BUSINESS_GSTIN=${BUSINESS_GSTIN:-07AAAAA0000A1Z5}
+    volumes:
+      # Persist database across container restarts
+      - ./bharat_biz.db:/app/bharat_biz.db
+      # Persist generated PDFs
+      - ./invoices:/app/invoices
+      # Persist uploaded media
+      - ./chat_media:/app/chat_media
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+=======
+  bharat-biz-agent:
+    build: .
+    container_name: bharat-biz-agent
+    ports:
+      - "8000:8000"
+    environment:
+      - WHATSAPP_VERIFY_TOKEN=${WHATSAPP_VERIFY_TOKEN}
+      - WHATSAPP_TOKEN=${WHATSAPP_TOKEN}
+      - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./bharat_biz.db:/app/bharat_biz.db
+      - ./media:/tmp/whatsapp_media
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+>>>>>>> 7e4398ab37a263c75b381f78a874db8edee8182f
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+<<<<<<< HEAD
+
+networks:
+  default:
+    name: mera-business-network
+=======
+>>>>>>> 7e4398ab37a263c75b381f78a874db8edee8182f
